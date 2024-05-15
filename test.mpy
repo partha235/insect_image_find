@@ -1,0 +1,2 @@
+import camera as cam 
+print(dir(cam))
