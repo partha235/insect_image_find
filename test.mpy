@@ -1,2 +1,9 @@
 import camera as cam 
-print(dir(cam))
+cam.init(0,format=cam.JPEG)
+img = cam.capture()
+imgFile = open("photo.jpg", "w")
+imgFile.write(img)
+imgFile.close()
+# import os
+# os.listdir()
+print("over")
