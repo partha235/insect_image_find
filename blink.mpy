@@ -1,0 +1,9 @@
+from machine import Pin 
+from utime import sleep_ms
+x=Pin(4,Pin.OUT)
+while True:
+    x.on()
+    sleep_ms(200)
+    print("hi")
+    x.off()
+    sleep_ms(200)

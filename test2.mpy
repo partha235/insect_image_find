@@ -1,0 +1,86 @@
+try:
+    import usocket as socket    # socket module allow us to send response over network.
+except:
+    import socket
+from bps_cre import *    # erase this line
+from utime import sleep_ms,sleep
+import network 
+from machine import Pin
+import gc 
+gc.collect()
+
+x=Pin(2,Pin.OUT)
+ssid=bps_ssid     # your network/hotspot/ssid name.
+passw=bps_passw    # your network/hotspot/ssid password.
+
+""" in this program I used network with station mode, which mean the board connect
+to the network which we programed to connect """
+sta= network.WLAN(network.STA_IF) # station interface.
+sta.active(True)
+print(sta.scan())
+sta.connect(ssid,passw)  # connecting to network.
+# sleep(1)
+print("connection status : ", sta.isconnected())
+
+
+
+
+while sta.isconnected()==False:
+    pass
+
+if sta.isconnected():
+    print("connection status : ", sta.isconnected())
+    
+# sta.ifconfig(('192.168.1.28', '255.255.255.0', '192.168.1.1', '218.248.112.65'))
+
+# (IP,Subnet,Gateway,DNS) here i declared that i need my own ip address; where leaving it 
+# make auto ip address according to our network.
+print(sta.ifconfig())
+
+# creating a web page
+def web_page():
+    html="""<html>
+    <head> 
+        <meta name="author" content="bps_explore">
+        <meta http-equiv="refresh" content="3">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Image test</title>
+        <link 
+            rel="short icon"
+            href="iconlogo.ico"
+            />
+    </head>
+    <body>
+        <h1>Insect Monitor</h1>
+        <img src="photo.jpeg" alt="insect picture">
+    </body>
+</html>
+"""
+    return html
+
+so=socket.socket(socket.AF_INET,socket.SOCK_STREAM) # AF-> Address Family
+so.bind(("",80))
+so.listen(3)
+
+while True:
+  try:
+    x.value(not x.value())
+    if gc.mem_free() < 102000:
+      gc.collect()
+    conn, addr = so.accept()
+    conn.settimeout(3.0)
+    print('Got a connection from %s' % str(addr))
+    request = conn.recv(1024)
+    conn.settimeout(None)
+    request = str(request)
+    print('Content = %s' % request)
+    response = web_page()
+    conn.send('HTTP/1.1 200 OK\n')
+    conn.send('Content-Type: text/html\n')
+    conn.send('Connection: close\n\n')
+    conn.sendall(response)
+    conn.close()
+    sleep_ms(100)
+  except OSError as e:
+    conn.close()
+    print('Connection closed')

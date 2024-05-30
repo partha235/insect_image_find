@@ -1,0 +1,52 @@
+import network
+import bps_cre
+import umail
+from umail import MIMEBase
+
+# Your network credentials
+ssid = bps_cre.bps_ssid
+password = bps_cre.bps_passw
+
+# Email details
+sender_email = "parthaa235@gmail.com"
+sender_name = 'bps'  # sender name
+sender_app_password = bps_cre.g_app_passw
+recipient_email = 'parthaa23@gmail.com'
+email_subject = 'Test Email'
+
+print("hi ")
+
+def connect_wifi(ssid, password):
+    # Connect to your network
+    station = network.WLAN(network.STA_IF)
+    station.active(True)
+    station.connect(ssid, password)
+    while not station.isconnected():
+        pass
+    print('Connection successful')
+    print(station.ifconfig())
+
+# Connect to your network
+connect_wifi(ssid, password)
+
+# Create a MIME message with the image attachment
+mime = MIMEBase("multipart/mixed")
+mime["From"] = sender_email
+mime["To"] = recipient_email
+mime["Subject"] = email_subject
+
+# Attach the image file
+with open("photo.jpeg", "rb") as img_file:
+    img_data = img_file.read()
+mime.attach(MIMEBase("image/jpeg", img_data, filename="photo.jpeg"))
+
+# Send the email
+smtp = umail.SMTP('smtp.gmail.com', 465, ssl=True)  # Gmail's SSL port
+try:
+    smtp.login(sender_email, sender_app_password)
+    smtp.send(sender_email, recipient_email, mime.as_string())
+    print("Email sent successfully")
+except Exception as e:
+    print("Failed to send email:", e)
+finally:
+    smtp.quit()
