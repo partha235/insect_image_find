@@ -2,7 +2,7 @@ try:
     import usocket as socket    # socket module allow us to send response over network.
 except:
     import socket
-from bps_cre import *    # erase this line
+import bps_cre    # erase this line
 from utime import sleep_ms, sleep
 import network 
 from machine import Pin
@@ -10,8 +10,8 @@ import gc
 gc.collect()
 
 x = Pin(2, Pin.OUT)
-ssid = bps_ssid  # your network/hotspot/ssid name.
-password = bps_passw    # your network/hotspot/ssid password.
+ssid = bps_cre.bps_ssid  # your network/hotspot/ssid name.
+password = bps_cre.bps_passw    # your network/hotspot/ssid password.
 
 sta = network.WLAN(network.STA_IF)  # station interface.
 sta.active(True)

@@ -6,7 +6,9 @@ from bps_cre import *    # erase this line
 from utime import sleep_ms,sleep
 import network 
 from machine import Pin
+import esp 
 import gc 
+esp.osdebug(None)
 gc.collect()
 
 x=Pin(2,Pin.OUT)
