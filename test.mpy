@@ -1,7 +1,7 @@
 import camera as cam 
 cam.init(0,format=cam.JPEG)
 img = cam.capture()
-imgFile = open("photo.jpg", "w")
+imgFile = open("photo.jpeg", "w")
 imgFile.write(img)
 imgFile.close()
 # import os
