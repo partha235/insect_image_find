@@ -1,0 +1,87 @@
+try:
+    import usocket as socket    # socket module allow us to send response over network.
+except:
+    import socket
+from bps_cre import *    # erase this line
+from utime import sleep_ms, sleep
+import network 
+from machine import Pin
+import gc 
+gc.collect()
+
+x = Pin(2, Pin.OUT)
+ssid = bps_ssid  # your network/hotspot/ssid name.
+password = bps_passw    # your network/hotspot/ssid password.
+
+sta = network.WLAN(network.STA_IF)  # station interface.
+sta.active(True)
+sta.connect(ssid, password)  # connecting to network.
+
+while not sta.isconnected():
+    pass
+
+if sta.isconnected():
+    print("Connection status: ", sta.isconnected())
+
+sta.ifconfig(('192.168.1.23', '255.255.255.0', '192.168.1.1', '218.248.112.65'))
+print('http://192.168.1.23')
+
+def web_page():
+    html = """<html>
+    <head> 
+        <meta name="author" content="bps_explore">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Image test</title>
+        <link rel="short icon" href="iconlogo.ico"/>
+    </head>
+    <body>
+        <h1>Insect Monitor</h1>
+        <img src="/photo.jpeg" alt="insect picture">
+    </body>
+</html>
+"""
+    return html
+
+def send_image(conn, image_path):
+    with open(image_path, 'rb') as file:
+        while True:
+            data = file.read(1024)
+            if not data:
+                break
+            conn.send(data)
+
+so = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # AF-> Address Family
+so.bind(("", 80))
+so.listen(3)
+
+while True:
+    try:
+        x.value(not x.value())
+        if gc.mem_free() < 102000:
+            gc.collect()
+        conn, addr = so.accept()
+        conn.settimeout(3.0)
+        print('Got a connection from %s' % str(addr))
+        request = conn.recv(1024)
+        conn.settimeout(None)
+        request = str(request)
+        print('Content = %s' % request)
+        
+        if 'GET /photo.jpeg' in request:
+            conn.send('HTTP/1.1 200 OK\n')
+            conn.send('Content-Type: image/jpeg\n')
+            conn.send('Connection: close\n\n')
+            send_image(conn, 'photo.jpeg')
+        else:
+            response = web_page()
+            conn.send('HTTP/1.1 200 OK\n')
+            conn.send('Content-Type: text/html\n')
+            conn.send('Connection: close\n\n')
+            conn.sendall(response)
+        
+        conn.close()
+        sleep_ms(100)
+    except OSError as e:
+        conn.close()
+        print('Connection closed')
+
