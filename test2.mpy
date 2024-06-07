@@ -33,11 +33,11 @@ while sta.isconnected()==False:
 if sta.isconnected():
     print("connection status : ", sta.isconnected())
     
-# sta.ifconfig(('192.168.1.28', '255.255.255.0', '192.168.1.1', '218.248.112.65'))
-
 # (IP,Subnet,Gateway,DNS) here i declared that i need my own ip address; where leaving it 
 # make auto ip address according to our network.
-print(sta.ifconfig())
+sta.ifconfig(('192.168.1.23', '255.255.255.0', '192.168.1.1', '218.248.112.65'))
+print('http://192.168.1.23')
+
 
 # creating a web page
 def web_page():
@@ -49,12 +49,12 @@ def web_page():
         <title>Image test</title>
         <link 
             rel="short icon"
-            href="iconlogo.ico"
+            href="/iconlogo.ico"
             />
     </head>
     <body>
         <h1>Insect Monitor</h1>
-        <img src="photo.jpeg" alt="insect picture">
+        <img src="/photo.jpeg" alt="insect picture">
     </body>
 </html>
 """
