@@ -1,0 +1,101 @@
+import camera as cam
+try:
+    import usocket as socket  # socket module allow us to send response over network.
+except:
+    import socket
+from utime import sleep_ms, sleep
+import network
+from machine import Pin
+import gc
+gc.collect()
+
+# Initialize the camera
+cam.init(0, format=cam.JPEG)
+print("Camera initiated")
+
+# LED pin for indication
+led = Pin(2, Pin.OUT)
+led.on()
+
+# WiFi credentials for Access Point
+ssid = 'bps_esp_cam'
+password = 'bps12345'
+
+# Set up the Access Point
+ap = network.WLAN(network.AP_IF)
+ap.active(True)
+ap.config(essid=ssid, password=password)
+
+print("Connection status: ", ap.isconnected())
+
+while not ap.isconnected():
+    pass
+
+if ap.isconnected():
+    print("Connection status: ", ap.isconnected())
+
+# Configure the IP address
+# ap.ifconfig(('192.168.1.28', '255.255.255.0', '192.168.1.1', '218.248.112.65'))
+
+
+print(ap.ifconfig())
+
+def web_page():
+    html = """<html>
+    <head> 
+        <meta name="author" content="bps_explore">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Video Stream</title>
+        <style>
+            body { background-color: #333; color: white; text-align: center; }
+            img { width: 100%; height: auto; }
+        </style>
+    </head>
+    <body>
+        <h1>Insect Monitor</h1>
+        <img src="/stream" alt="Video stream">
+    </body>
+</html>
+"""
+    return html
+
+def send_image(conn):
+    img = cam.capture()
+    conn.send(b'--frame\r\n')
+    conn.send(b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')
+
+# Create a socket and listen for connections
+so = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+so.bind(("", 80))
+so.listen(5)
+
+print("Server listening on http://192.168.1.28")
+
+while True:
+    try:
+        conn, addr = so.accept()
+        print('Got a connection from %s' % str(addr))
+        request = conn.recv(1024)
+        request = str(request)
+        print('Content = %s' % request)
+        
+        if 'GET /stream' in request:
+            conn.send('HTTP/1.1 200 OK\r\n')
+            conn.send('Content-Type: multipart/x-mixed-replace; boundary=frame\r\n\r\n')
+            try:
+                while True:
+                    send_image(conn)
+                    sleep_ms(100)  # Adjust this delay for frame rate
+            except OSError as e:
+                print('Connection closed')
+        else:
+            response = web_page()
+            conn.send('HTTP/1.1 200 OK\r\n')
+            conn.send('Content-Type: text/html\r\n')
+            conn.send('Connection: close\r\n\r\n')
+            conn.sendall(response)
+        
+        conn.close()
+    except OSError as e:
+        conn.close()
+        print('Connection closed')
